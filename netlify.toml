@@ -1,2 +1,27 @@
+# ============================================================
+# ワイプ・アーケード：Netlify の設定
+#
+# Netlify Drawer（フィードバック用のツールバー）について
+#  ・Drawer はこのリポジトリのコードには入っていません。Netlify が
+#    Deploy Preview / ブランチデプロイの HTML に、あとから差しこみます。
+#  ・止める本来の場所は Netlify の画面です：
+#    Project configuration > Developer settings > Continuous deployment
+#    > Collaboration tools > Configure で Deploy Previews / Branch deploys
+#    の両方をオフ → そのあと「Clear cache and deploy site」で作り直す。
+#  ・以前ここにあった NETLIFY_ENABLE_DRAWER は Netlify に存在しない設定で、
+#    効果がなかったので削除しました。
+#  ・念のため、下の CSP ヘッダーで Drawer の読みこみ（app.netlify.com の
+#    iframe・外部スクリプト）をブラウザ側でブロックします。
+# ============================================================
+
 [build]
-  environment = { NETLIFY_ENABLE_DRAWER = "false" }
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # アプリが使うのは「同じサイトのファイル」と Google Fonts だけ。
+    # frame-src / child-src を 'none' にすると Drawer の iframe が開けない。
+    # script-src に外部ドメインを入れないので、Drawer の外部スクリプトも読めない。
+    # （ゲームに外部のスクリプトや画像以外の通信を足すときは、ここに追記する）
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; frame-src 'none'; child-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"

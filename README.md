@@ -266,6 +266,8 @@ js/packs.js           パックの読みこみと、問題を各ゲームの形�
 js/validate.js        パックのチェック（ブラウザと tools で共通）
 js/games/*.js         42種類のゲーム（_template.js はひな形）
 js/app.js             画面（ホーム・形式一覧・パック・設定・結果）
+js/no-netlify-drawer.js  Netlify で公開したとき Drawer を取りのぞく保険
+netlify.toml          Netlify の設定（Drawer をブロックする CSP など）
 js/packs-bundle.js    packs フォルダのまとめ（自動で作られる）
 packs/*.json          問題パック（同梱 6 パック・316 問）
 schema/               JSON の形（エディタの入力補助用）
@@ -279,3 +281,10 @@ tools/                build-bundle・validate・serve・ai-pack・from-newswipe
 - 記録・設定・読みこんだパック・マイパックは、**そのブラウザの中だけ**に保存されます（ほかの人には見えません）。ブラウザのデータを消すと消えます。大事なマイパックは JSON で保存しておいてください。
 - API キーは環境変数で渡し、ファイルに書かないでください。
 - 問題の内容（とくに AI が作ったもの）は、遊ぶ前に確かめてください。
+
+## 12. Netlify で公開するとき
+
+- Netlify Drawer（フィードバック用のツールバー）は、Netlify が **Deploy Preview とブランチデプロイ**にあとから差しこむものです。このアプリのコードには入っていません。
+- 止めるには Netlify の画面で **Project configuration → Developer settings → Continuous deployment → Collaboration tools → Configure** を開き、Deploy Previews と Branch deploys の Drawer を両方オフにします。そのあと **Deploys → Trigger deploy → Clear cache and deploy site** で作り直してください（前に作られたデプロイには Drawer が残ったままです）。
+- 念のため `netlify.toml` の CSP ヘッダーと `js/no-netlify-drawer.js` でも、Drawer が出ないようにしています。
+- ゲームに外部のスクリプト・フォント・通信先を足すときは、`netlify.toml` の Content-Security-Policy にそのドメインを追記してください（書かないとブロックされます）。
