@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.invalid/wipe-arcade/pack.schema.json",
+  "title": "ワイプ・アーケードの問題パック",
+  "description": "packs フォルダに入れる JSON の形。VS Code などで \"$schema\": \"../schema/pack.schema.json\" と書くと、入力の手助けが出ます。",
+  "type": "object",
+  "required": ["id", "title", "items"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": { "type": "string", "pattern": "^[\\w.-]+$", "maxLength": 40, "description": "パックの id（英数字と . - _）" },
+    "title": { "type": "string", "maxLength": 60, "description": "パックの名前" },
+    "description": { "type": "string", "maxLength": 300 },
+    "author": { "type": "string", "maxLength": 60 },
+    "version": { "type": ["string", "number"] },
+    "items": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/item" } },
+    "formats": { "type": "array", "items": { "$ref": "#/definitions/format" }, "description": "パックのオリジナル形式（遊びの種類＋進め方＋ひねり＋しぼりこみ）" }
+  },
+  "definitions": {
+    "str": { "type": "string", "minLength": 1 },
+    "common": {
+      "properties": {
+        "id": { "type": "string", "maxLength": 60 },
+        "tags": { "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 20 } },
+        "level": { "enum": [1, 2, 3], "description": "1 やさしい〜3 むずかしい" },
+        "explain": { "type": "string", "maxLength": 300, "description": "答えたあとに出る解説" },
+        "source": { "type": "object", "required": ["label"], "properties": { "label": { "type": "string", "maxLength": 120 }, "url": { "type": "string", "pattern": "^https?://" } } }
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["type"],
+      "allOf": [{ "$ref": "#/definitions/common" }],
+      "properties": { "type": { "enum": ["choice", "truefalse", "number", "year", "order", "pairs", "groups", "word", "blank"] } },
+      "oneOf": [
+        { "properties": { "type": { "const": "choice" }, "q": { "type": "string", "maxLength": 200 }, "choices": { "type": "array", "minItems": 2, "maxItems": 6, "uniqueItems": true, "items": { "type": "string", "maxLength": 40 } }, "answer": { "type": "integer", "minimum": 0, "maximum": 5, "description": "正解の番号（1つめが 0）" }, "short": { "type": "string", "maxLength": 16 } }, "required": ["q", "choices", "answer"] },
+        { "properties": { "type": { "const": "truefalse" }, "q": { "type": "string", "maxLength": 200 }, "answer": { "type": "boolean" } }, "required": ["q", "answer"] },
+        { "properties": { "type": { "const": "number" }, "q": { "type": "string", "maxLength": 200 }, "answer": { "type": "number" }, "unit": { "type": "string", "maxLength": 10 }, "label": { "type": "string", "maxLength": 20 }, "min": { "type": "number" }, "max": { "type": "number" }, "step": { "type": "number", "exclusiveMinimum": 0 } }, "required": ["q", "answer"] },
+        { "properties": { "type": { "const": "year" }, "q": { "type": "string", "maxLength": 200 }, "answer": { "type": "integer", "minimum": -3000, "maximum": 3000 }, "label": { "type": "string", "maxLength": 20 } }, "required": ["q", "answer"] },
+        { "properties": { "type": { "const": "order" }, "q": { "type": "string", "maxLength": 200 }, "items": { "type": "array", "minItems": 3, "maxItems": 8, "uniqueItems": true, "items": { "type": "string", "maxLength": 30 }, "description": "正しい順に書く" }, "values": { "type": "array", "items": { "type": ["string", "number"] } } }, "required": ["q", "items"] },
+        { "properties": { "type": { "const": "pairs" }, "q": { "type": "string", "maxLength": 200 }, "pairs": { "type": "array", "minItems": 3, "maxItems": 8, "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": [{ "type": "string", "maxLength": 20 }, { "type": "string", "maxLength": 24 }] } } }, "required": ["pairs"] },
+        { "properties": { "type": { "const": "groups" }, "q": { "type": "string", "maxLength": 200 }, "groups": { "type": "array", "minItems": 2, "maxItems": 4, "items": { "type": "object", "required": ["name", "items"], "properties": { "name": { "type": "string", "maxLength": 20 }, "items": { "type": "array", "minItems": 2, "maxItems": 8, "items": { "type": "string", "maxLength": 16 } } } } } }, "required": ["groups"] },
+        { "properties": { "type": { "const": "word" }, "q": { "type": "string", "maxLength": 200 }, "answer": { "type": "string", "minLength": 2, "maxLength": 10, "pattern": "^\\S+$" }, "hint": { "type": "string", "maxLength": 100 } }, "required": ["q", "answer"] },
+        { "properties": { "type": { "const": "blank" }, "text": { "type": "string", "maxLength": 200, "pattern": "\\[[^\\]]+\\]", "description": "正解を [ ] でかこむ（1か所だけ）" }, "choices": { "type": "array", "minItems": 2, "maxItems": 6, "uniqueItems": true, "items": { "type": "string", "maxLength": 30 } } }, "required": ["text", "choices"] }
+      ]
+    },
+    "format": {
+      "type": "object",
+      "required": ["id", "name", "game"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[\\w-]+$", "maxLength": 40 },
+        "name": { "type": "string", "maxLength": 40 },
+        "game": { "type": "string", "description": "遊びの種類の id（README の一覧を見てね）", "enum": ["yontaku", "hayaoshi", "nitaku", "shokyo", "jiwajiwa", "bet", "roulette", "million", "tobira", "fuusen", "mogura", "lane", "catch", "boss", "duel", "sugoroku", "tower", "panel", "bingo", "flash", "marubatsu", "furiwake", "usotsuki", "pitari", "nearpin", "highlow", "kinko", "docchi", "chain", "narabe", "touch", "timeline", "memory", "senmusubi", "pairrush", "bunrui", "connections", "hazure", "mojinarabe", "kotobaate", "wordsearch", "mix"] },
+        "flow": { "enum": ["quick", "std", "long", "time60", "survival", "sudden"] },
+        "twist": { "enum": ["none", "hurry", "mirror", "shake", "dark", "blind", "shuffle", "reverse"] },
+        "description": { "type": "string", "maxLength": 200 },
+        "filter": { "type": "object", "properties": { "tags": { "type": "array", "items": { "type": "string" } }, "level": { "type": "array", "items": { "enum": [1, 2, 3] } }, "thisPackOnly": { "type": "boolean" } } }
+      }
+    }
+  }
+}

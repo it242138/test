@@ -1,0 +1,10 @@
+{
+  "packs": [
+    "general.json",
+    "geography.json",
+    "history.json",
+    "kotoba.json",
+    "newswipe-news.json",
+    "science.json"
+  ]
+}

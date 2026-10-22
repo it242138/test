@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ワイプ・アーケード</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect x=%222%22 y=%222%22 width=%2228%22 height=%2228%22 rx=%227%22 fill=%22%23FFC83D%22 stroke=%22%231B1D24%22 stroke-width=%223%22/%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%226%22 fill=%22%23C2255C%22/%3E%3C/svg%3E">
+<meta name="description" content="JSON の問題パックで遊ぶ、ミニゲーム＆クイズのアーケード">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=IBM+Plex+Mono:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<script>/* 画面が出る前にテーマを当てておく */
+try{var p=JSON.parse(localStorage.getItem('arcade1:prefs')||'{}');if(p.theme==='light'||p.theme==='dark')document.documentElement.setAttribute('data-theme',p.theme);if(p.motion==='off')document.documentElement.classList.add('still');}catch(e){}</script>
+<link rel="stylesheet" href="css/arcade.css">
+<link rel="stylesheet" href="css/games.css">
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <button class="logo" data-go="home" type="button" aria-label="ホームへ"><span class="logo-mark" aria-hidden="true"></span><span class="logo-t">ワイプ<b>・</b>アーケード</span></button>
+    <span class="top-stars" id="top-stars" title="あつめた星"></span>
+    <button class="icon-btn" id="btn-sound" type="button" aria-pressed="true" aria-label="効果音"></button>
+  </header>
+
+  <nav class="tabs" aria-label="画面の切り替え">
+    <button class="tab" data-go="home" type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="11" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10.5v4M6 12.5h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="15.5" cy="11.5" r="1.3" fill="currentColor"/><circle cx="17.5" cy="14" r="1.3" fill="currentColor"/></svg><span>あそぶ</span></button>
+    <button class="tab" data-go="list" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="4" cy="6" r="1.4" fill="currentColor"/><circle cx="4" cy="12" r="1.4" fill="currentColor"/><circle cx="4" cy="18" r="1.4" fill="currentColor"/></svg><span>形式一覧</span></button>
+    <button class="tab" data-go="packs" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 4l8 3.5v9L12 20l-8-3.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 7.5 12 11l8-3.5M12 11v9" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>問題パック</span></button>
+    <button class="tab" data-go="settings" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="17" r="2.3" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>設定</span></button>
+  </nav>
+
+  <main class="main">
+    <!-- ホーム -->
+    <section class="scr" id="scr-home" aria-label="あそぶ">
+      <div class="hero">
+        <div class="hero-face" id="hero-face" aria-hidden="true"></div>
+        <div class="hero-body">
+          <p class="hero-kicker">きょうの1本 <span id="hero-date"></span></p>
+          <h1 class="hero-title" id="hero-title">よみこみ中…</h1>
+          <p class="hero-sub" id="hero-sub"></p>
+          <div class="hero-act">
+            <button class="btn-main" id="btn-daily" type="button">あそぶ</button>
+            <button class="btn-sub" id="btn-random" type="button">おまかせ</button>
+          </div>
+        </div>
+      </div>
+      <p class="stat-line" id="stat-line"></p>
+      <div class="chips" id="fam-chips" role="tablist" aria-label="ゲームのなかま"></div>
+      <div class="game-grid" id="game-grid"></div>
+    </section>
+
+    <!-- 形式一覧 -->
+    <section class="scr" id="scr-list" aria-label="形式一覧" hidden>
+      <div class="list-head">
+        <h2 class="h2">形式一覧 <small id="list-count"></small></h2>
+        <input class="search" id="list-q" type="search" placeholder="名前でさがす（例：かがみ、ライフ3）" aria-label="形式を名前でさがす">
+        <div class="chips" id="list-flow"></div>
+        <div class="chips" id="list-twist"></div>
+        <div class="chips" id="list-state"></div>
+      </div>
+      <ul class="fm-list" id="fm-list"></ul>
+      <button class="btn-sub more" id="list-more" type="button" hidden>もっと見る</button>
+    </section>
+
+    <!-- 問題パック -->
+    <section class="scr" id="scr-packs" aria-label="問題パック" hidden>
+      <h2 class="h2">問題パック</h2>
+      <p class="lead" id="packs-lead"></p>
+      <div class="drop" id="drop">
+        <p><b>JSON ファイルをここにドロップ</b><br>または</p>
+        <div class="drop-act">
+          <label class="btn-main file-btn">ファイルを選ぶ<input id="file-in" type="file" accept=".json,application/json" multiple hidden></label>
+          <button class="btn-sub" id="btn-paste" type="button">はりつけて読みこむ</button>
+          <button class="btn-sub" id="btn-template" type="button">ひな形をダウンロード</button>
+        </div>
+      </div>
+      <div class="packs" id="packs"></div>
+      <section class="mine">
+        <h3 class="h3">マイパック（かんたんエディタ）</h3>
+        <p class="lead">JSON を書かなくても、ここで問題を作れます。作った問題はすぐにゲームで使えます。</p>
+        <div class="mine-act"><button class="btn-main" id="btn-new-item" type="button">問題を作る</button><button class="btn-sub" id="btn-mine-dl" type="button">マイパックを JSON で保存</button></div>
+        <ul class="mine-list" id="mine-list"></ul>
+      </section>
+    </section>
+
+    <!-- 設定 -->
+    <section class="scr" id="scr-settings" aria-label="設定" hidden>
+      <h2 class="h2">設定</h2>
+      <div class="set" id="set"></div>
+    </section>
+  </main>
+
+  <!-- プレイ -->
+  <section class="play" id="scr-play" aria-label="プレイ中" hidden>
+    <header class="ph">
+      <button class="ph-quit" id="ph-quit" type="button" aria-label="やめる">✕</button>
+      <div class="ph-mid">
+        <p class="ph-name" id="ph-name"></p>
+        <p class="ph-rule" id="ph-rule"></p>
+        <div class="ph-prog"><i id="ph-prog"></i></div>
+      </div>
+      <div class="ph-right"><span class="ph-time num" id="ph-time" hidden></span><span class="ph-count num" id="ph-count"></span></div>
+    </header>
+    <div class="ph-sub">
+      <span class="ph-score" id="ph-score"></span>
+      <span class="ph-combo" id="ph-combo" aria-live="polite"></span>
+      <span class="ph-lives" id="ph-lives"></span>
+    </div>
+    <div class="qtw" id="ph-qtw" hidden><i id="ph-qt"></i></div>
+    <div class="arena" id="arena"></div>
+    <div class="feedback" id="feedback" role="status" hidden></div>
+    <div class="ph-say" id="ph-say" hidden></div>
+  </section>
+
+  <!-- 結果 -->
+  <section class="result" id="scr-result" aria-label="結果" hidden></section>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+  <div class="sheet-grip" aria-hidden="true"></div>
+  <div class="sheet-head"><h3 id="sheet-title"></h3><button class="sheet-close" type="button" aria-label="とじる">✕</button></div>
+  <div class="sheet-body" id="sheet-body"></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="fx" id="fx" aria-hidden="true"></div>
+
+<!-- 問題パック（index.html をダブルクリックで開いたとき用。tools/build-bundle.mjs で作りなおせる） -->
+<script src="js/packs-bundle.js"></script>
+<script src="js/validate.js"></script>
+<script src="js/core.js"></script>
+<script src="js/art.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/packs.js"></script>
+<script src="js/games/choice.js"></script>
+<script src="js/games/action.js"></script>
+<script src="js/games/battle.js"></script>
+<script src="js/games/tf.js"></script>
+<script src="js/games/num.js"></script>
+<script src="js/games/order.js"></script>
+<script src="js/games/pairs.js"></script>
+<script src="js/games/groups.js"></script>
+<script src="js/games/word.js"></script>
+<script src="js/games/mix.js"></script>
+<!-- 自分で作ったゲームは、ここに <script src="js/games/○○.js"></script> を足す -->
+<script src="js/app.js"></script>
+</body>
+</html>
